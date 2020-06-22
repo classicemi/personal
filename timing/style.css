@@ -14,12 +14,20 @@ body {
   height: 100%;
 }
 
-.time-text {
-  line-height: 50vh;
+.content {
   height: 100%;
   color: #fff;
-  font-size: 40vh;
   text-align: center;
+}
+
+.day-text {
+  line-height: 35vh;
+  font-size: 35vmin;
+}
+
+.time-text {
+  line-height: 65vh;
+  font-size: 65vmin;
 }
 
 .invisible {

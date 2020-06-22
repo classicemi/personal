@@ -8,9 +8,11 @@
   </head>
   <body>
     <div id="app">
-      <div class="time-text">
-        <p>{{ month }}月{{ day }}日</p>
-        <p>{{ hour }}<span :class="cursorVisible">:</span>{{minute}}</p>
+      <div class="content">
+        <p class="day-text">{{ month }}月{{ day }}日</p>
+        <p class="time-text">
+          {{ hour }}<span :class="cursorVisible">:</span>{{minute}}
+        </p>
       </div>
     </div>
     <script src="https://unpkg.com/vue@2.6.11/dist/vue.js"></script>
