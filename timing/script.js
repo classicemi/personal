@@ -12,18 +12,23 @@ new Vue({
       this.date = new Date();
     }, 1000);
   },
+  methods: {
+    formatNumber(num) {
+      return num < 10 ? `0${num}` : num;
+    },
+  },
   computed: {
     month() {
-      return this.date.getMonth() + 1;
+      return this.formatNumber(this.date.getMonth() + 1);
     },
     day() {
-      return this.date.getDate();
+      return this.formatNumber(this.date.getDate());
     },
     hour() {
-      return this.date.getHours();
+      return this.formatNumber(this.date.getHours());
     },
     minute() {
-      return this.date.getMinutes();
+      return this.formatNumber(this.date.getMinutes());
     },
     cursorVisible() {
       return this.date.getSeconds() % 2 === 0 ? "visible" : "invisible";
