@@ -18,9 +18,10 @@ function getSurroundingCellsPosition(ri, ci, rn, cn) {
           .map(item => `${item[0]}|${item[1]}`)
 }
 
-class MineSweeper {
+export default class MineSweeper {
   constructor(mapSize) {
-    this._map = this.generateMap(PREDEFINED_MAP[mapSize])
+    this._map = this.generateMap(PREDEFINED_MAP[mapSize.toUpperCase()])
+    this.board = this.generateBoard(this._map)
   }
 
   // 根据地图尺寸生成随机地图
@@ -64,6 +65,16 @@ class MineSweeper {
     return result
   }
 
+  // 根据地图生成游戏棋盘
+  generateBoard(map) {
+    return map.map(row => row.map(cell => ({
+      value: cell,
+      flagged: false,
+      tagged: false,
+      opened: false
+    })))
+  }
+
   // Fisher–Yates shuffle
   _shuffle(arr) {
     let len = arr.length, pos
@@ -74,6 +85,3 @@ class MineSweeper {
     return arr
   }
 }
-
-const sweeper = new MineSweeper('SMALL')
-console.log(sweeper._map)
