@@ -81,6 +81,8 @@
   border: 1px solid #666;
   color: #aaa;
   background-color: #aaa;
+  text-align: center;
+  line-height: 30px;
 }
 
 .cell.digged {
