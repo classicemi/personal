@@ -3,9 +3,13 @@
     <div class="board">
       <div class="row" v-for="(row, rowIndex) in board" :key="rowIndex">
         <div
-          @click="dig(rowIndex, cellIndex)"
+          @click.left.exact="dig(rowIndex, cellIndex)"
+          @click.right.prevent="toggleFlag(rowIndex, cellIndex)"
+          @click.left.meta="doubleDig(rowIndex, cellIndex)"
           class="cell"
-          :class="{digged: cell.digged}"
+          :class="{
+            digged: cell.digged
+          }"
           v-for="(cell, cellIndex) in row"
           :key="cellIndex"
         >
@@ -28,6 +32,12 @@
       dig(rowIndex, cellIndex) {
         this.$emit('dig', { rowIndex, cellIndex })
       },
+      toggleFlag(rowIndex, cellIndex) {
+        this.$emit('toggle-flag', { rowIndex, cellIndex })
+      },
+      doubleDig(rowIndex, cellIndex) {
+        this.$emit('double-dig', { rowIndex, cellIndex })
+      },
       formatCell(cell) {
         if (cell.digged) {
           if (cell.value === 9) {
@@ -36,6 +46,11 @@
           if (cell.value !== 0) {
             return cell.value
           }
+          return ''
+        }
+        if (cell.flagged) {
+          return '🚩'
+        } else {
           return ''
         }
       }

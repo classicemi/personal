@@ -10,9 +10,14 @@ const MINE = 9
 const ZERO = 0
 // 方块周围八个方块的偏移值
 const AROUND_OFFSET = [
-  [-1, -1], [-1, 0], [-1, 1],
-  [0, -1], [0, 1],
-  [1, -1], [1, 0], [1, 1]
+  [-1, -1],
+  [-1, 0],
+  [-1, 1],
+  [0, -1],
+  [0, 1],
+  [1, -1],
+  [1, 0],
+  [1, 1]
 ]
 // 游戏状态
 const SWEEPER_STATUS = {
@@ -20,16 +25,29 @@ const SWEEPER_STATUS = {
   DEAD: 'DEAD'
 }
 
-function getSurroundingCellsPosition(ri, ci, rn, cn) {
+function getSurroundingCells(ri, ci, rn, cn) {
   const pr = ri - 1
   const nr = ri + 1
   const pc = ci - 1
   const nc = ci + 1
-  return [[pr, pc], [pr, ci], [pr, nc],
-          [ri, pc],           [ri, nc],
-          [nr, pc], [nr, ci], [nr, nc]]
-          .filter(item => (item[0] >= 0 && item[0] < rn) && (item[1] >= 0 && item[1] < cn))
-          .map(item => `${item[0]}|${item[1]}`)
+  return [
+    [pr, pc],
+    [pr, ci],
+    [pr, nc],
+    [ri, pc],
+    [ri, nc],
+    [nr, pc],
+    [nr, ci],
+    [nr, nc]
+  ].filter(
+    (item) => item[0] >= 0 && item[0] < rn && item[1] >= 0 && item[1] < cn
+  )
+}
+
+function getSurroundingCellsPosition(ri, ci, rn, cn) {
+  return getSurroundingCells(ri, ci, rn, cn).map(
+    (item) => `${item[0]}|${item[1]}`
+  )
 }
 
 export default class MineSweeper {
@@ -46,14 +64,59 @@ export default class MineSweeper {
     if (this.status === SWEEPER_STATUS.DEAD) {
       return
     }
-    const target = this.board[rowIndex][cellIndex]
-    target.digged = true
-    // 如果挖开雷，game over
-    if (target.value === MINE) {
-      return this._kill()
-    } else if (target.value === ZERO) {
-      // 如果挖开的方块是0，自动挖开周围的方块
-      this._spread(rowIndex, cellIndex)
+    if (this.board[rowIndex] && this.board[rowIndex][cellIndex]) {
+      const target = this.board[rowIndex][cellIndex]
+      target.digged = true
+      // 如果挖开雷，game over
+      if (target.value === MINE) {
+        return this._kill()
+      } else if (target.value === ZERO) {
+        // 如果挖开的方块是0，自动挖开周围的方块
+        this._spread(target)
+      }
+    }
+  }
+
+  // 双击操作
+  doubleDig(rowIndex, cellIndex) {
+    if (this.status === SWEEPER_STATUS.DEAD) {
+      return
+    }
+    if (this.board[rowIndex] && this.board[rowIndex][cellIndex]) {
+      const target = this.board[rowIndex][cellIndex]
+      // 找到相邻方块
+      const aroundCells = getSurroundingCells(
+        rowIndex,
+        cellIndex,
+        this.board.length,
+        this.board[0].length
+      ).map((pos) => this.board[pos[0]][pos[1]])
+      // 计算标旗数
+      const flagNum = aroundCells.filter((cell) => cell.flagged).length
+      if (flagNum === target.value) {
+        // 如果周围没有雷，依次挖开非标旗方块，如果有雷，挖开其中一个
+        // 此处行为待确认
+        const mineCell = aroundCells
+          .filter((cell) => !cell.flagged)
+          .find((cell) => cell.value === MINE)
+        if (!mineCell) {
+          aroundCells.forEach((cell) => {
+            if (!cell.flagged) {
+              this.dig(cell.rowIndex, cell.cellIndex)
+            }
+          })
+        } else {
+          this.dig(mineCell.rowIndex, mineCell.cellIndex)
+        }
+      }
+    }
+  }
+
+  // 插旗子
+  toggleFlag(rowIndex, cellIndex) {
+    if (this.board[rowIndex] && this.board[rowIndex][cellIndex]) {
+      const target = this.board[rowIndex][cellIndex]
+      target.flagged = !target.flagged
     }
   }
 
@@ -62,7 +125,9 @@ export default class MineSweeper {
     const [rowNum, cellNum, mineNum] = mapDef
     const total = rowNum * cellNum
     // 生成一维数组，前m个为雷
-    let linear = Array(mineNum).fill(MINE).concat(Array(total - mineNum).fill(0))
+    let linear = Array(mineNum)
+      .fill(MINE)
+      .concat(Array(total - mineNum).fill(0))
     // 洗牌
     linear = this._shuffle(linear)
 
@@ -85,8 +150,13 @@ export default class MineSweeper {
       row.forEach((cell, cellIndex) => {
         if (cell === MINE) return
         let count = 0
-        const surCells = getSurroundingCellsPosition(rowIndex, cellIndex, rowNum, cellNum)
-        surCells.forEach(pos => {
+        const surCells = getSurroundingCellsPosition(
+          rowIndex,
+          cellIndex,
+          rowNum,
+          cellNum
+        )
+        surCells.forEach((pos) => {
           if (cellMineMap[pos] === MINE) {
             count++
           }
@@ -101,7 +171,8 @@ export default class MineSweeper {
   // 根据地图生成游戏棋盘
   _generateBoard(map) {
     return map.map((row, rowIndex) =>
-      row.map((cell, cellIndex) => this._cellFactory(rowIndex, cellIndex, cell)))
+      row.map((cell, cellIndex) => this._cellFactory(rowIndex, cellIndex, cell))
+    )
   }
 
   _cellFactory(rowIndex, cellIndex, value) {
@@ -122,17 +193,19 @@ export default class MineSweeper {
   }
 
   // 根据给定位置方块挖开周围所有可自动挖开方块
-  _spread(rowIndex, cellIndex) {
-    const target = this.board[rowIndex][cellIndex]
-    if (target.value !== ZERO) return
-    AROUND_OFFSET.forEach(offset => {
+  _spread(cell) {
+    if (cell.value !== ZERO) return
+    const { rowIndex, cellIndex } = cell
+    AROUND_OFFSET.forEach((offset) => {
       const row = rowIndex + offset[0]
       const cell = cellIndex + offset[1]
-      if (this.board[row] &&
-          this.board[row][cell] &&
-          this.board[row][cell].digged === false) {
+      if (
+        this.board[row] &&
+        this.board[row][cell] &&
+        this.board[row][cell].digged === false
+      ) {
         this.board[row][cell].digged = true
-        this._spread(row, cell)
+        this._spread(this.board[row][cell])
       }
     })
   }
@@ -144,7 +217,8 @@ export default class MineSweeper {
 
   // Fisher–Yates shuffle
   _shuffle(arr) {
-    let len = arr.length, pos
+    let len = arr.length,
+      pos
     while (len) {
       pos = Math.floor(Math.random() * len--)
       ;[arr[len], arr[pos]] = [arr[pos], arr[len]]

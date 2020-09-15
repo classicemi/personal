@@ -9,7 +9,7 @@
       <input type="radio" id="size-large" name="size" v-model="size" value="LARGE">
       <button @click="setupBoard(size)">生成</button>
     </div>
-    <Board :board="board" @dig="dig" />
+    <Board :board="board" @dig="dig" @toggle-flag="toggleFlag" @double-dig="doubleDig" />
   </div>
 </template>
 
@@ -37,6 +37,14 @@ export default {
       mineSweeper.value.dig(rowIndex, cellIndex)
     }
 
+    const toggleFlag = ({ rowIndex, cellIndex }) => {
+      mineSweeper.value.toggleFlag(rowIndex, cellIndex)
+    }
+
+    const doubleDig = ({ rowIndex, cellIndex }) => {
+      mineSweeper.value.doubleDig(rowIndex, cellIndex)
+    }
+
     onMounted(() => {
       setupBoard(size.value)
     })
@@ -45,7 +53,9 @@ export default {
       size,
       board,
       setupBoard,
-      dig
+      dig,
+      toggleFlag,
+      doubleDig
     }
   },
 }
