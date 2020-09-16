@@ -15,15 +15,25 @@
       <input type="radio" id="size-large" name="size" v-model="size" value="LARGE">
       <button @click="setupBoard(size)">生成</button>
     </div> -->
-    <div v-if="boardType === 'WEB'">
+    <div v-if="boardType === 'WEB'" class="board-container">
       <Board
         :board="board"
         :status="status"
+        :remains="remains"
         @dig="dig"
         @toggle-flag="toggleFlag"
         @double-dig="doubleDig"
         @reset="setupBoard"
       />
+      <div class="help">
+        <ol>
+          <li>点击头像可重新开始；</li>
+          <li>点击左键挖开格子；</li>
+          <li>点击右键标记格子，再次点击取消标记；</li>
+          <li>按住 Win 键（Mac 为 Command 键）点击左键相当于左右键双击；</li>
+          <li>挖开所有没有雷的格子即为胜利。</li>
+        </ol>
+      </div>
     </div>
     <div v-else></div>
   </div>
@@ -46,9 +56,11 @@ export default {
     const mineSweeper = ref(ms)
     const board = ref(ms.board)
     const status = ref(ms.status)
+    const remains = ref(0)
 
     function resetStatus() {
       status.value = mineSweeper.value.getStatus()
+      remains.value = mineSweeper.value.remains
     }
 
     const setupBoard = () => {
@@ -81,6 +93,7 @@ export default {
       size,
       board,
       status,
+      remains,
       setupBoard,
       dig,
       toggleFlag,
@@ -96,5 +109,26 @@ export default {
   flex-direction: column;
   align-items: center;
   padding-top: 60px;
+}
+
+.board-container {
+  position: relative;
+}
+
+.help {
+  position: absolute;
+  width: 260px;
+  top: 0;
+  right: -280px;
+  background-color: rgba(255, 255, 255, .4);
+}
+
+.help ol {
+  padding: 10px 10px 10px 25px;
+  font-size: 12px;
+}
+
+.help ol li {
+  margin-bottom: 6px;
 }
 </style>

@@ -55,7 +55,8 @@ export default class MineSweeper {
   constructor(mapSize) {
     this._mapSize = mapSize
     this.status = SWEEPER_STATUS.ALIVE
-    this._map = this._generateMap(PREDEFINED_MAP[mapSize.toUpperCase()])
+    this._mapDef = PREDEFINED_MAP[mapSize.toUpperCase()]
+    this._map = this._generateMap(this._mapDef)
     this.board = this._generateBoard(this._map)
   }
 
@@ -65,14 +66,14 @@ export default class MineSweeper {
   }
 
   // 获得当前红旗数
-  getFlagNum() {
+  get remains() {
     let count = 0
     this.board.forEach(row => row.forEach(cell => {
       if (cell.flagged) {
         count++
       }
     }))
-    return count
+    return this._mapDef[2] - count
   }
 
   // 挖开指定位置方块

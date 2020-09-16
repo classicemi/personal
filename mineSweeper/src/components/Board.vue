@@ -1,6 +1,9 @@
 <template>
   <div class="container">
     <div class="status-bar">
+      <div class="remains">
+        {{ remainsText }}
+      </div>
       <div class="avatar" @mouseup="$emit('reset')">
         {{ getAvatar(status) }}
       </div>
@@ -9,7 +12,7 @@
       <div class="row" v-for="(row, rowIndex) in board" :key="rowIndex">
         <div
           @mouseup.left.exact="dig(rowIndex, cellIndex)"
-          @mouseup.right.prevent="toggleFlag(rowIndex, cellIndex)"
+          @mousedown.right.prevent="toggleFlag(rowIndex, cellIndex)"
           @click.right.prevent
           @mouseup.left.meta="doubleDig(rowIndex, cellIndex)"
           class="cell"
@@ -28,6 +31,8 @@
 </template>
 
 <script>
+import { computed } from 'vue'
+
 function addClass(event) {
   const target = event.target
   const classList = target.classList
@@ -46,7 +51,17 @@ export default {
       type: Array,
       default: () => []
     },
-    status: String
+    status: String,
+    remains: Number
+  },
+  setup(props) {
+    const remainsText = computed(() => {
+      return ('000' + props.remains).slice(-3)
+    })
+
+    return {
+      remainsText
+    }
   },
   methods: {
     dig(rowIndex, cellIndex) {
@@ -80,6 +95,7 @@ export default {
   },
   mounted() {
     window.addEventListener('mousedown', event => {
+      if (event.button !== 0) return
       const target = event.target
       if (
         (target.classList.contains('cell') && this.status === 'ALIVE') ||
@@ -110,6 +126,7 @@ export default {
 }
 
 .status-bar {
+  position: relative;
   display: flex;
   justify-content: center;
   padding: 3px 6px;
@@ -117,6 +134,19 @@ export default {
   background-color: #bdbdbd;
   border: 2px solid #838383;
   border-color: #838383 #f6f6f6 #f6f6f6 #838383;
+}
+
+.remains {
+  position: absolute;
+  left: 6px;
+  top: 4px;
+  padding: 0 3px;
+  height: 23px;
+  line-height: 26px;
+  background-color: #000;
+  color: #ff0202;
+  font-size: 20px;
+  font-family: Monaco, 'Courier New', Courier, monospace;
 }
 
 .avatar {
