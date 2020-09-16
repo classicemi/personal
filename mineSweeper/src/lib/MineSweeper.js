@@ -21,6 +21,7 @@ const AROUND_OFFSET = [
 ]
 // 游戏状态
 const SWEEPER_STATUS = {
+  VICTORY: 'VICTORY',
   ALIVE: 'ALIVE',
   DEAD: 'DEAD'
 }
@@ -52,21 +53,38 @@ function getSurroundingCellsPosition(ri, ci, rn, cn) {
 
 export default class MineSweeper {
   constructor(mapSize) {
-    console.log(mapSize)
+    this._mapSize = mapSize
     this.status = SWEEPER_STATUS.ALIVE
     this._map = this._generateMap(PREDEFINED_MAP[mapSize.toUpperCase()])
     this.board = this._generateBoard(this._map)
   }
 
+  // 获得当前状态
+  getStatus() {
+    return this.status
+  }
+
+  // 获得当前红旗数
+  getFlagNum() {
+    let count = 0
+    this.board.forEach(row => row.forEach(cell => {
+      if (cell.flagged) {
+        count++
+      }
+    }))
+    return count
+  }
+
   // 挖开指定位置方块
   dig(rowIndex, cellIndex) {
     // 如果已经死亡，点击无效
-    if (this.status === SWEEPER_STATUS.DEAD) {
+    if (!this._checkEnabled()) {
       return
     }
     if (this.board[rowIndex] && this.board[rowIndex][cellIndex]) {
       const target = this.board[rowIndex][cellIndex]
       target.digged = true
+      this._checkVictory()
       // 如果挖开雷，game over
       if (target.value === MINE) {
         return this._kill()
@@ -79,7 +97,7 @@ export default class MineSweeper {
 
   // 双击操作
   doubleDig(rowIndex, cellIndex) {
-    if (this.status === SWEEPER_STATUS.DEAD) {
+    if (!this._checkEnabled()) {
       return
     }
     if (this.board[rowIndex] && this.board[rowIndex][cellIndex]) {
@@ -114,10 +132,35 @@ export default class MineSweeper {
 
   // 插旗子
   toggleFlag(rowIndex, cellIndex) {
+    if (!this._checkEnabled()) {
+      return
+    }
     if (this.board[rowIndex] && this.board[rowIndex][cellIndex]) {
       const target = this.board[rowIndex][cellIndex]
       target.flagged = !target.flagged
     }
+  }
+
+  // 检测是否胜利
+  _checkVictory() {
+    let count = 0
+    this.board.forEach(row => row.forEach(cell => {
+      if (cell.value !== MINE && cell.digged === true) {
+        count++
+      }
+    }))
+    const mapDef = PREDEFINED_MAP[this._mapSize.toUpperCase()]
+    if (count === (mapDef[0] * mapDef[1] - mapDef[2])) {
+      this.status = SWEEPER_STATUS.VICTORY
+    }
+  }
+
+  // 检测是否可操作（死亡、胜利状态不可操作）
+  _checkEnabled() {
+    if (this.status === SWEEPER_STATUS.DEAD || this.status === SWEEPER_STATUS.VICTORY) {
+      return false
+    }
+    return true
   }
 
   // 根据地图尺寸生成随机地图
